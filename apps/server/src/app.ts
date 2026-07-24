@@ -58,6 +58,8 @@ export interface ServerDependencies {
   readonly config: ServerConfig;
   readonly database: DatabaseHandle;
   readonly codexProbe?: typeof probeCodexExecutable;
+  /** Test/embedding seam; production uses the official local CLI adapter. */
+  readonly codexAdapter?: ProviderAdapter;
 }
 
 function requestId(request: FastifyRequest): string {
@@ -119,9 +121,11 @@ export async function buildServer(
     [fakeAdapter.id, fakeAdapter],
   ]);
   if (dependencies.config.codexWorkspace !== undefined) {
-    const codexAdapter = createCodexAdapter({
-      workingDirectory: dependencies.config.codexWorkspace,
-    });
+    const codexAdapter =
+      dependencies.codexAdapter ??
+      createCodexAdapter({
+        workingDirectory: dependencies.config.codexWorkspace,
+      });
     adapters.set(codexAdapter.id, codexAdapter);
   }
   const supervisor = createRunSupervisor(

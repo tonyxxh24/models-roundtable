@@ -45,6 +45,9 @@ provider demo.
 - Added an owner-only adapter smoke runner covering start, normalized complete,
   resume by opaque session ID, cancellation, and final empty-workspace check.
   It requires an exact post-probe attestation and never runs in CI.
+- Added server integration coverage proving first `@codex` dispatch uses
+  `start`, persists the opaque provider session, and the next dispatch uses
+  `continue`; both requests retain `workspace_read`.
 
 ## Files changed
 
@@ -84,7 +87,7 @@ provider demo.
 | `pnpm --filter @models-roundtable/provider-codex run build` | Pass | Run after restoring locked dependencies |
 | `pnpm --filter @models-roundtable/provider-codex test` | Pass | Focused run passed; full gate: 2 files, 12 tests |
 | `pnpm --filter @models-roundtable/core test` | Pass | Full gate: 6 files, 12 tests |
-| `pnpm --filter @models-roundtable/server test` | Pass | Full gate: 2 files, 6 tests |
+| `pnpm --filter @models-roundtable/server test` | Pass | Focused run: 2 files, 7 tests; full gate: 2 files, 8 tests |
 | Owner smoke without attestation | Pass | Refused before any provider call with an allowlisted error |
 | `pnpm --filter @models-roundtable/provider-codex typecheck` | Pass | No TypeScript errors |
 | `pnpm lint` | Pass | ESLint and cross-platform Prettier check pass |

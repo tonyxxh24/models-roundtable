@@ -2,6 +2,10 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import type {
+  ProviderAdapter,
+  ProviderRunRequest,
+} from "@models-roundtable/contracts";
 import { openDatabase } from "@models-roundtable/db";
 import { buildServer } from "./app.js";
 import { loadServerConfig, type ServerConfig } from "./config.js";
@@ -96,6 +100,100 @@ describe("local server security shell", () => {
           enabled: true,
         }),
       ]);
+    } finally {
+      await server.close();
+      database.close();
+    }
+  });
+
+  it("routes @codex start then resume with persisted read-only session state", async () => {
+    const dataDirectory = temporaryDirectory();
+    const codexWorkspace = temporaryDirectory();
+    const calls: {
+      mode: "start" | "resume";
+      request: ProviderRunRequest & { readonly providerSessionId?: string };
+    }[] = [];
+    const codexAdapter: ProviderAdapter = {
+      id: "codex",
+      start: async (request) => {
+        calls.push({ mode: "start", request });
+        return {
+          runToken: "codex-test-start",
+          events: (async function* () {
+            yield {
+              type: "session_started",
+              providerSessionId: "opaque-codex-session",
+            } as const;
+            yield { type: "text_delta", text: "codex-start" } as const;
+            yield { type: "completed" } as const;
+          })(),
+          cancel: async () => undefined,
+        };
+      },
+      continue: async (request) => {
+        calls.push({ mode: "resume", request });
+        return {
+          runToken: "codex-test-resume",
+          events: (async function* () {
+            yield { type: "text_delta", text: "codex-resume" } as const;
+            yield { type: "completed" } as const;
+          })(),
+          cancel: async () => undefined,
+        };
+      },
+    };
+    const database = openDatabase({ dataDirectory });
+    const server = await buildServer({
+      config: { ...testConfig(dataDirectory), codexWorkspace },
+      database,
+      codexAdapter,
+    });
+    try {
+      const bootstrap = await server.inject({
+        method: "POST",
+        url: "/api/v1/bootstrap",
+      });
+      const cookie = bootstrap.headers["set-cookie"] as string;
+      const room = await server.inject({
+        method: "POST",
+        url: "/api/v1/rooms",
+        headers: { cookie },
+        payload: { title: "Codex routing room" },
+      });
+      const roomId = room.json<{ roomId: string }>().roomId;
+      await server.inject({
+        method: "POST",
+        url: "/api/v1/rooms/" + roomId + "/participants/codex",
+        headers: { cookie },
+        payload: {},
+      });
+
+      for (const [idempotencyKey, body] of [
+        ["codex-start-command", "@codex first"],
+        ["codex-resume-command", "@codex second"],
+      ] as const) {
+        const response = await server.inject({
+          method: "POST",
+          url: "/api/v1/rooms/" + roomId + "/messages",
+          headers: { cookie },
+          payload: { body, idempotencyKey },
+        });
+        expect(response.statusCode).toBe(201);
+      }
+
+      expect(calls).toHaveLength(2);
+      expect(calls.map((call) => call.mode)).toEqual(["start", "resume"]);
+      expect(calls.map((call) => call.request.permission)).toEqual([
+        "workspace_read",
+        "workspace_read",
+      ]);
+      expect(calls[1]?.request.providerSessionId).toBe("opaque-codex-session");
+      expect(
+        database.rooms
+          .listMessages(roomId)
+          .filter((message) => message.kind === "agent")
+          .map((message) => message.body),
+      ).toEqual(["codex-start", "codex-resume"]);
     } finally {
       await server.close();
       database.close();
