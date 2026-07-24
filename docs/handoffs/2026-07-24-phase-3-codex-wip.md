@@ -42,6 +42,9 @@ provider demo.
 - Added a shell-free resume argv builder using the documented read-only config
   key, guarded by `verifiedReadOnlyResume` with a default of false.
 - Added successful/idempotent Codex participant and missing-adapter tests.
+- Added an owner-only adapter smoke runner covering start, normalized complete,
+  resume by opaque session ID, cancellation, and final empty-workspace check.
+  It requires an exact post-probe attestation and never runs in CI.
 
 ## Files changed
 
@@ -51,6 +54,7 @@ provider demo.
 - `fixtures/providers/codex/0.145.0/`: sanitized observed and synthetic fixtures.
 - `packages/provider-codex/src/index.ts`: safe Codex CLI adapter.
 - `packages/provider-codex/src/index.test.ts`: fixture and boundary tests.
+- `packages/provider-codex/src/owner-smoke.ts`: guarded real-adapter smoke runner.
 - `packages/provider-codex/SMOKE.md`: owner-only, opt-in smoke procedure.
 - `packages/core/src/run-supervisor.ts`: provider registry routing.
 - `packages/db/src/rooms.ts`: adapter-aware profiles, queues, and sessions.
@@ -81,6 +85,7 @@ provider demo.
 | `pnpm --filter @models-roundtable/provider-codex test` | Pass | Focused run passed; full gate: 2 files, 12 tests |
 | `pnpm --filter @models-roundtable/core test` | Pass | Full gate: 6 files, 12 tests |
 | `pnpm --filter @models-roundtable/server test` | Pass | Full gate: 2 files, 6 tests |
+| Owner smoke without attestation | Pass | Refused before any provider call with an allowlisted error |
 | `pnpm --filter @models-roundtable/provider-codex typecheck` | Pass | No TypeScript errors |
 | `pnpm lint` | Pass | ESLint and cross-platform Prettier check pass |
 | `pnpm typecheck` | Pass | All packages and apps pass |
@@ -116,7 +121,7 @@ provider demo.
 
 ## Exact next action
 
-Have the owner run the read-only resume verification in
-`packages/provider-codex/SMOKE.md`. If the write probe remains absent, wire the
-verified flag into server composition, run the app-owned start/resume/cancel
-smoke, then execute the full Phase 3 gate.
+Have the owner run the read-only resume verification and then the guarded
+adapter smoke in `packages/provider-codex/SMOKE.md`. If both pass, record the
+evidence, wire the verified resume policy into server composition, and run the
+final Phase 3 gate.

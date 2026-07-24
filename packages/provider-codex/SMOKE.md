@@ -63,3 +63,22 @@ Report only the exit codes, whether the probe file exists, and whether
 `ROUNDTRIP_RESUME_OK` appeared. Do not report the thread ID or raw JSONL.
 
 Reference: <https://learn.chatgpt.com/docs/config-file/config-reference>
+
+## App-owned adapter smoke
+
+Only after both resume checks above pass, use a new empty directory and run the
+adapter-level start, resume, and cancellation smoke:
+
+```powershell
+New-Item -ItemType Directory -Force -Path C:\tmp\models-roundtable-codex-app-smoke | Out-Null
+$env:MODELS_ROUNDTABLE_CODEX_WORKSPACE = 'C:\tmp\models-roundtable-codex-app-smoke'
+$env:MODELS_ROUNDTABLE_CODEX_RESUME_SMOKE = 'I_HAVE_VERIFIED_READ_ONLY_RESUME'
+pnpm --filter @models-roundtable/provider-codex smoke:owner
+Remove-Item Env:\MODELS_ROUNDTABLE_CODEX_RESUME_SMOKE
+Remove-Item Env:\MODELS_ROUNDTABLE_CODEX_WORKSPACE
+```
+
+Required fixed output is `APP_START_OK`, `APP_RESUME_OK`, `APP_CANCEL_OK`, and
+`APP_WORKSPACE_EMPTY_OK`. The runner refuses a non-empty workspace, keeps the
+session identifier in memory, prints only allowlisted results, and is never
+called by the automated test suite.
