@@ -39,6 +39,7 @@ provider demo.
 - `fixtures/providers/codex/0.145.0/`: sanitized observed and synthetic fixtures.
 - `packages/provider-codex/src/index.ts`: safe Codex CLI adapter.
 - `packages/provider-codex/src/index.test.ts`: fixture and boundary tests.
+- `packages/provider-codex/SMOKE.md`: owner-only, opt-in smoke procedure.
 - `packages/provider-codex/package.json`, `pnpm-lock.yaml`: local contracts dependency.
 
 ## Decisions and deviations
