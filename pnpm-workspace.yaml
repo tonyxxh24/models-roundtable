@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Native SQLite and Vite's transformer need their package-owned build steps.
+# No other dependency lifecycle script is allowlisted.
+onlyBuiltDependencies:
+  - better-sqlite3
+  - esbuild
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true

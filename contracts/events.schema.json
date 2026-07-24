@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://models-roundtable.local/contracts/events-v1.schema.json",
+  "title": "Models Roundtable server event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "eventId", "type", "occurredAt", "payload"],
+  "properties": {
+    "v": { "const": 1 },
+    "eventId": { "$ref": "#/$defs/id" },
+    "type": { "$ref": "#/$defs/eventType" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "roomId": { "$ref": "#/$defs/id" },
+    "roomSequence": { "type": "integer", "minimum": 1 },
+    "runId": { "$ref": "#/$defs/id" },
+    "runSequence": { "type": "integer", "minimum": 1 },
+    "requestId": { "$ref": "#/$defs/id" },
+    "payload": { "type": "object" }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "eventType": {
+      "enum": [
+        "connection.ready",
+        "command.accepted",
+        "command.rejected",
+        "room.created",
+        "room.updated",
+        "room.archived",
+        "participant.updated",
+        "message.created",
+        "message.revised",
+        "message.tombstoned",
+        "run.queued",
+        "run.started",
+        "run.session_bound",
+        "run.text_delta",
+        "run.tool_started",
+        "run.tool_updated",
+        "run.tool_finished",
+        "run.approval_required",
+        "run.approval_resolved",
+        "run.warning",
+        "run.completed",
+        "run.failed",
+        "run.cancelled",
+        "provider.health_changed",
+        "workspace.lease_changed",
+        "skill.projection_changed"
+      ]
+    }
+  }
+}

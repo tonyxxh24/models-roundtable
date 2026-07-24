@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-07-23T16:15:00.000Z",
+  "evidenceVersion": 1,
+  "environment": {
+    "os": "Windows NT 10.0.26200",
+    "architecture": "x64",
+    "shell": "Windows PowerShell 5.1",
+    "node": "v22.14.0"
+  },
+  "providers": [
+    {
+      "adapterId": "claude",
+      "decision": "GO_WITH_LIMITATIONS",
+      "providerVersion": "2.1.217",
+      "requiredInvocation": {
+        "printMode": true,
+        "streamJsonRequiresVerbose": true,
+        "stdinPrompt": true,
+        "permissionMode": "plan"
+      },
+      "capabilities": {
+        "streamingJson": true,
+        "sessionIdEvent": true,
+        "resumeSession": true,
+        "cwdArgument": true,
+        "readOnlyMode": true,
+        "approvalEvents": false,
+        "structuredToolEvents": false,
+        "imageInput": false,
+        "gracefulCancel": false
+      },
+      "verifiedBy": [
+        "normal.sanitized.jsonl",
+        "resume.sanitized.jsonl",
+        "stdin.sanitized.jsonl",
+        "permission-plan.sanitized.json",
+        "force-cleanup.sanitized.json",
+        "invalid-session.sanitized.jsonl"
+      ],
+      "limitations": [
+        "Provider-level graceful cancellation was not verified; only owned-process forced cleanup was observed.",
+        "Tools, approvals, images, and write permission are disabled pending dedicated probes."
+      ]
+    },
+    {
+      "adapterId": "codex",
+      "decision": "NO_GO_CURRENT_AGENT_ENVIRONMENT",
+      "providerVersion": null,
+      "capabilities": {
+        "streamingJson": false,
+        "sessionIdEvent": false,
+        "resumeSession": false,
+        "cwdArgument": false,
+        "readOnlyMode": false,
+        "approvalEvents": false,
+        "structuredToolEvents": false,
+        "imageInput": false,
+        "gracefulCancel": false
+      },
+      "limitations": [
+        "The installed desktop-app executable could be discovered but not executed by this agent identity; Windows access denied before CLI output.",
+        "Re-probe from the owner's interactive terminal before implementing provider-codex."
+      ]
+    }
+  ]
+}

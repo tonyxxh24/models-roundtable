@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-07-23T00:00:00.000Z",
+  "environment": {
+    "os": "windows",
+    "architecture": "x64",
+    "shell": "powershell"
+  },
+  "providers": [
+    {
+      "adapterId": "codex",
+      "decision": "UNTESTED",
+      "providerVersion": null,
+      "capabilities": {
+        "streamingJson": false,
+        "sessionIdEvent": false,
+        "resumeSession": false,
+        "cwdArgument": false,
+        "readOnlyMode": false,
+        "approvalEvents": false,
+        "structuredToolEvents": false,
+        "imageInput": false,
+        "gracefulCancel": false
+      },
+      "notes": ["Example only; Phase 0 must replace with observed evidence."]
+    }
+  ]
+}

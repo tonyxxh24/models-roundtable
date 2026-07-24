@@ -1,0 +1,37 @@
+# Dependencies and builds
+node_modules/
+.pnpm-store/
+dist/
+dist-types/
+build/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime data; never commit local chat history or attachments
+.roundtable-data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+diagnostic-bundles/
+
+# Logs and temporary files
+*.log
+.cache/
+.tmp/
+tmp/
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

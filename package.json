@@ -1,0 +1,29 @@
+{
+  "name": "models-roundtable",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first multi-agent coding conversation workspace.",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=22.14.0 <23",
+    "pnpm": "11.9.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @models-roundtable/server --filter @models-roundtable/web run dev",
+    "build": "pnpm --filter \"./packages/*\" -r run build && pnpm --filter \"./apps/*\" -r run build",
+    "lint": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" -r run lint && pnpm run format:check",
+    "format:check": "prettier --check \"apps/**/*\" \"packages/**/*\" contracts/*.json package.json pnpm-workspace.yaml tsconfig.base.json",
+    "typecheck": "pnpm run build && pnpm --filter \"./apps/*\" --filter \"./packages/*\" -r run typecheck",
+    "test": "pnpm run build && pnpm --filter \"./apps/*\" --filter \"./packages/*\" -r run test",
+    "test:integration": "pnpm run build && pnpm --filter @models-roundtable/db run test:integration"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.1.1",
+    "eslint": "10.7.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.65.0",
+    "vitest": "4.1.10"
+  }
+}
