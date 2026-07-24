@@ -3,6 +3,42 @@ import { describe, expect, it } from "vitest";
 import { createRunSupervisor, type RunQueuePort } from "./run-supervisor.js";
 
 describe("provider-neutral run supervisor", () => {
+  it("fails a queued run safely when its adapter is unavailable", async () => {
+    let state: "queued" | "starting" | "failed" = "queued";
+    const events: ProviderEvent[] = [];
+    const queue: RunQueuePort = {
+      listQueuedRuns: () => [
+        {
+          runId: "missing-adapter-run",
+          roomId: "room-1",
+          targetParticipantId: "codex-agent",
+          prompt: "hello",
+          inputRoomSequence: 2,
+          adapterId: "codex",
+          permission: "workspace_read",
+        },
+      ],
+      transitionRun: (input) => {
+        if (state !== input.from) return false;
+        state = input.to as typeof state;
+        return true;
+      },
+      recordProviderEvent: (_runId, event) => events.push(event),
+    };
+    const supervisor = createRunSupervisor(queue, new Map());
+
+    await expect(supervisor.drainQueued()).resolves.toEqual([
+      { runId: "missing-adapter-run", state: "failed" },
+    ]);
+    expect(state).toBe("failed");
+    expect(events).toEqual([
+      expect.objectContaining({
+        type: "failed",
+        code: "provider_missing",
+      }),
+    ]);
+  });
+
   it("claims queued work and records normalized fake events through completion", async () => {
     let state: "queued" | "starting" | "running" | "completed" = "queued";
     const events: ProviderEvent[] = [];

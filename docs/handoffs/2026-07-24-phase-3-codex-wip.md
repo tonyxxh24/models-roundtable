@@ -14,10 +14,11 @@ an updated capability report, and a tested `provider-codex` process adapter
 that uses stdin, argument arrays, `shell: false`, `--json`, and
 `--sandbox read-only`.
 
-The adapter rejects workspace writes. It also deliberately rejects resume:
-the observed `codex exec resume --help` does not expose a verified read-only
-sandbox option, so invoking it from the app would violate the read-only
-guarantee. This safety limitation blocks Phase 3 completion, not the fake
+The adapter rejects workspace writes. Official Codex documentation plus the
+installed `resume -c key=value` option now establish a candidate read-only
+resume argv using `sandbox_mode="read-only"`. Its builder and disabled-by-default
+feature gate are tested, but the server will not enable it until the owner runs
+the documented write-denial smoke. This blocks Phase 3 completion, not the fake
 provider demo.
 
 ## Scope completed
@@ -38,6 +39,9 @@ provider demo.
   frontend status display. Tests inject the probe and never call real Codex.
 - Added explicit workspace configuration and a per-room owner action for
   creating `@codex`; default rooms and `@all` remain fake-only.
+- Added a shell-free resume argv builder using the documented read-only config
+  key, guarded by `verifiedReadOnlyResume` with a default of false.
+- Added successful/idempotent Codex participant and missing-adapter tests.
 
 ## Files changed
 
@@ -59,12 +63,10 @@ provider demo.
 ## Decisions and deviations
 
 - ADRs referenced: ADR-0002, ADR-0003, ADR-0006.
-- Resume is intentionally disabled in the adapter despite a successful manual
-  `resume --last` probe. The current CLI help did not prove a way to enforce
-  `read-only` for a resumed invocation, and no config key may be guessed.
-- The server remains fake-provider-only. It currently hard-codes the fake
-  adapter and fake session persistence, so replacing it requires a controlled
-  provider registry/database integration rather than a superficial import.
+- Resume remains disabled at server composition until the owner verifies the
+  documented `-c sandbox_mode="read-only"` invocation denies writes.
+- The server has a provider registry and adapter-aware persistence. Codex is
+  included only when an absolute workspace is explicitly configured.
 
 ## Verification evidence
 
@@ -76,7 +78,9 @@ provider demo.
 | Owner invalid resume | Pass | `no rollout found`, code `-32600` |
 | Owner Ctrl+C | Pass | Exit code `-1`, workspace empty |
 | `pnpm --filter @models-roundtable/provider-codex run build` | Pass | Run after restoring locked dependencies |
-| `pnpm --filter @models-roundtable/provider-codex test` | Pass | 2 files, 8 tests |
+| `pnpm --filter @models-roundtable/provider-codex test` | Pass | Focused run passed; full gate: 2 files, 12 tests |
+| `pnpm --filter @models-roundtable/core test` | Pass | Full gate: 6 files, 12 tests |
+| `pnpm --filter @models-roundtable/server test` | Pass | Full gate: 2 files, 6 tests |
 | `pnpm --filter @models-roundtable/provider-codex typecheck` | Pass | No TypeScript errors |
 | `pnpm lint` | Pass | ESLint and cross-platform Prettier check pass |
 | `pnpm typecheck` | Pass | All packages and apps pass |
@@ -103,9 +107,8 @@ provider demo.
 
 ## Known issues and risks
 
-- Resume must remain disabled until an installed CLI exposes a verified
-  read-only resume invocation, or an ADR establishes an equivalently safe
-  transport.
+- Resume must remain disabled until the owner write-denial smoke verifies the
+  installed CLI honors `-c sandbox_mode="read-only"` during resume.
 - The automated execution identity cannot run Codex; real provider smoke must
   be launched by the owner from an interactive terminal.
 - The current database schema/repository assumes adapter id `fake`; do not
@@ -113,8 +116,7 @@ provider demo.
 
 ## Exact next action
 
-Read `docs/04-provider-adapters.md`, `docs/07-security-and-permissions.md`,
-ADR-0002/0003/0006, then generalize the server's adapter selection and provider
-session persistence without changing fake-provider behavior. Stop before
-enabling Codex resume unless an owner supplies an installed-help-supported,
-read-only resume invocation.
+Have the owner run the read-only resume verification in
+`packages/provider-codex/SMOKE.md`. If the write probe remains absent, wire the
+verified flag into server composition, run the app-owned start/resume/cancel
+smoke, then execute the full Phase 3 gate.

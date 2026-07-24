@@ -3,6 +3,7 @@ import { join } from "node:path";
 import type { ProviderRunHandle } from "@models-roundtable/contracts";
 import { describe, expect, it } from "vitest";
 import {
+  buildCodexArguments,
   createCodexAdapter,
   normalizeCodexEvent,
   probeCodexExecutable,
@@ -28,6 +29,33 @@ function fixture(name: string): readonly unknown[] {
 }
 
 describe("Codex CLI 0.145.0 normalization", () => {
+  it("builds shell-free read-only argv for start and verified resume", () => {
+    expect(buildCodexArguments({ kind: "start" })).toEqual([
+      "exec",
+      "--sandbox",
+      "read-only",
+      "--json",
+      "--skip-git-repo-check",
+      "-",
+    ]);
+    expect(
+      buildCodexArguments({
+        kind: "resume",
+        providerSessionId: "--untrusted-session-id",
+      }),
+    ).toEqual([
+      "exec",
+      "resume",
+      "-c",
+      'sandbox_mode="read-only"',
+      "--json",
+      "--skip-git-repo-check",
+      "--",
+      "--untrusted-session-id",
+      "-",
+    ]);
+  });
+
   it("reports a missing executable without leaking process diagnostics", async () => {
     await expect(
       probeCodexExecutable("models-roundtable-missing-codex-executable"),

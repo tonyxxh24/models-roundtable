@@ -39,6 +39,69 @@ describe("local server security shell", () => {
     ).toThrow("127.0.0.1");
   });
 
+  it("adds one read-only Codex participant only after workspace opt-in", async () => {
+    const dataDirectory = temporaryDirectory();
+    const codexWorkspace = temporaryDirectory();
+    const database = openDatabase({ dataDirectory });
+    const server = await buildServer({
+      config: { ...testConfig(dataDirectory), codexWorkspace },
+      database,
+      codexProbe: async () => ({
+        health: "ready",
+        providerVersion: "0.145.0",
+        capabilityHash: "test-capability-hash",
+        safeMessage: "Codex CLI is ready for tests.",
+      }),
+    });
+    try {
+      const bootstrap = await server.inject({
+        method: "POST",
+        url: "/api/v1/bootstrap",
+      });
+      const cookie = bootstrap.headers["set-cookie"] as string;
+      const room = await server.inject({
+        method: "POST",
+        url: "/api/v1/rooms",
+        headers: { cookie },
+        payload: { title: "Codex opt-in room" },
+      });
+      const roomId = room.json<{ roomId: string }>().roomId;
+
+      const first = await server.inject({
+        method: "POST",
+        url: "/api/v1/rooms/" + roomId + "/participants/codex",
+        headers: { cookie },
+        payload: {},
+      });
+      expect(first.statusCode).toBe(201);
+      const participantId = first.json<{ participantId: string }>()
+        .participantId;
+      expect(participantId).toBeTypeOf("string");
+      const duplicate = await server.inject({
+        method: "POST",
+        url: "/api/v1/rooms/" + roomId + "/participants/codex",
+        headers: { cookie },
+        payload: {},
+      });
+      expect(duplicate.statusCode).toBe(200);
+      expect(duplicate.json()).toMatchObject({ id: participantId });
+      expect(
+        database.rooms
+          .listParticipants(roomId)
+          .filter((participant) => participant.handle === "codex"),
+      ).toEqual([
+        expect.objectContaining({
+          id: participantId,
+          kind: "agent",
+          enabled: true,
+        }),
+      ]);
+    } finally {
+      await server.close();
+      database.close();
+    }
+  });
+
   it("reports validated health, rejects foreign origins, and establishes a local session", async () => {
     const dataDirectory = temporaryDirectory();
     const database = openDatabase({ dataDirectory });

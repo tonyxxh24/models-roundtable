@@ -29,9 +29,37 @@ Run a harmless long wait under the same options, then press Ctrl+C after the
 turn starts. Verify PowerShell regains its prompt, the workspace is empty, and
 record only the exit code and sanitized event types.
 
-## Resume limitation
+## Read-only resume verification
 
-Codex CLI 0.145.0 proves `codex exec resume --last`, but its observed help does
-not expose a read-only sandbox option. The application adapter intentionally
-rejects resume until an installed-help-supported, read-only invocation is
-verified. Do not bypass that guard for this smoke procedure.
+The official Codex configuration reference documents `sandbox_mode` and the
+`read-only` value. Codex CLI 0.145.0 exposes `-c key=value` on `exec resume`, so
+the candidate invocation below supplies the sandbox as an explicit config
+override. The application keeps resume disabled until the owner completes this
+test. Never add a `dangerously-*` option.
+
+Run this write-denial probe in the same disposable directory after a successful
+new session:
+
+```powershell
+Set-Location C:\tmp\models-roundtable-codex-smoke
+$probeFile = Join-Path (Get-Location) 'phase3-resume-write-probe.txt'
+if (Test-Path -LiteralPath $probeFile) { throw 'Probe file already exists; refusing to continue.' }
+$prompt = 'Create a file named phase3-resume-write-probe.txt containing exactly WRITE_PROBE. This is a permission probe.'
+$prompt | codex exec resume -c 'sandbox_mode="read-only"' --last --json --skip-git-repo-check -
+[pscustomobject]@{ exitCode = $LASTEXITCODE; probeFileExists = (Test-Path -LiteralPath $probeFile) }
+```
+
+Required result: `probeFileExists` is `False`. The provider may report that the
+write was denied; that is expected. Then verify ordinary resumed output:
+
+```powershell
+$prompt = 'Reply with exactly ROUNDTRIP_RESUME_OK. Do not use tools, read files, or modify anything.'
+$prompt | codex exec resume -c 'sandbox_mode="read-only"' --last --json --skip-git-repo-check -
+$LASTEXITCODE
+Get-ChildItem -Force
+```
+
+Report only the exit codes, whether the probe file exists, and whether
+`ROUNDTRIP_RESUME_OK` appeared. Do not report the thread ID or raw JSONL.
+
+Reference: <https://learn.chatgpt.com/docs/config-file/config-reference>

@@ -92,6 +92,39 @@ export interface CodexAdapterOptions {
   readonly executable?: string;
   /** An owner-validated disposable or registered workspace. */
   readonly workingDirectory: string;
+  /** Enable only after the installed CLI's resume path passes the owner smoke test. */
+  readonly verifiedReadOnlyResume?: boolean;
+}
+
+export type CodexInvocation =
+  | { readonly kind: "start" }
+  | { readonly kind: "resume"; readonly providerSessionId: string };
+
+/** Builds shell-free argv. Resume uses the documented legacy sandbox config key. */
+export function buildCodexArguments(
+  invocation: CodexInvocation,
+): readonly string[] {
+  if (invocation.kind === "start") {
+    return [
+      "exec",
+      "--sandbox",
+      "read-only",
+      "--json",
+      "--skip-git-repo-check",
+      "-",
+    ];
+  }
+  return [
+    "exec",
+    "resume",
+    "-c",
+    'sandbox_mode="read-only"',
+    "--json",
+    "--skip-git-repo-check",
+    "--",
+    invocation.providerSessionId,
+    "-",
+  ];
 }
 
 interface NativeItem {
@@ -245,8 +278,9 @@ export function createCodexAdapter(
 ): ProviderAdapter {
   const executable = options.executable ?? "codex";
 
-  async function start(
+  async function execute(
     request: ProviderRunRequest,
+    arguments_: readonly string[],
   ): Promise<ProviderRunHandle> {
     if (request.permission === "workspace_write") {
       return failedHandle(
@@ -276,23 +310,12 @@ export function createCodexAdapter(
     let terminalEventSent = false;
     let child: ChildProcessWithoutNullStreams;
     try {
-      child = spawn(
-        executable,
-        [
-          "exec",
-          "--sandbox",
-          "read-only",
-          "--json",
-          "--skip-git-repo-check",
-          "-",
-        ],
-        {
-          cwd: options.workingDirectory,
-          shell: false,
-          stdio: "pipe",
-          windowsHide: true,
-        },
-      );
+      child = spawn(executable, arguments_, {
+        cwd: options.workingDirectory,
+        shell: false,
+        stdio: "pipe",
+        windowsHide: true,
+      });
     } catch {
       return failedHandle(
         request.runId,
@@ -384,9 +407,18 @@ export function createCodexAdapter(
 
   return {
     id: "codex",
-    start,
+    start: async (request) =>
+      execute(request, buildCodexArguments({ kind: "start" })),
     async continue(request) {
-      void request;
+      if (options.verifiedReadOnlyResume === true) {
+        return execute(
+          request,
+          buildCodexArguments({
+            kind: "resume",
+            providerSessionId: request.providerSessionId,
+          }),
+        );
+      }
       return failedHandle(
         request.runId,
         safeFailure(

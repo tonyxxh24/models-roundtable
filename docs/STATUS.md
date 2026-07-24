@@ -17,7 +17,7 @@ Last updated: 2026-07-24
 | 0 - Provider feasibility spike | Complete | Codex | Claude GO with limitations; Codex blocked by current agent execution ACL |
 | 1 - Repository foundation | Complete | Codex | Frozen install, all gates, migration, and loopback evidence are in the 2026-07-24 Phase 1 handoff |
 | 2 - Local chat with fake provider | Complete | Codex | Durable multi-agent fake chat, replay/stream/cancel/retry, search/export, context inspection, recovery, accessibility, and all gates pass |
-| 3 - Codex Personal Mode adapter | In progress | Codex | Provider-aware routing, bounded Codex readiness probe/UI, fixtures, and read-only new-session adapter pass gates; safe resume and owner app smoke remain |
+| 3 - Codex Personal Mode adapter | In progress | Codex | Provider-aware routing, bounded readiness/UI, fixtures, new-session adapter, and opt-in room participant pass gates; documented read-only resume candidate and owner app smoke remain |
 | 4 - Claude Personal Mode adapter | Blocked | - | Personal/local boundary only |
 | 5 - Skills, instructions, workspace permissions | Blocked | - | Requires both adapters stable |
 | 6 - Reliability and release candidate | Blocked | - | Local single-owner release |
