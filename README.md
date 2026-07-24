@@ -1,13 +1,29 @@
 # Models Roundtable
 
-Models Roundtable is a local-first web application for placing human participants and multiple coding-agent CLIs in one persistent chat room. A message such as `@codex review this repository` or `@claude challenge the previous answer` is routed to the named local provider process, streamed into the room, and recorded in a local SQLite database.
+Models Roundtable is a local-first web application for placing a human and
+multiple coding-agent participants in one persistent chat room. The intended
+experience is a message such as `@codex review this repository` or
+`@claude challenge the previous answer`, routed to a named local provider
+process and recorded in a local SQLite database.
 
-Phase 1 provides the local application foundation: a React/Vite web readiness
-shell, a Fastify loopback server, shared runtime contracts, and SQLite
-migrations. Persistent rooms, provider processes, skills, and collaboration are
-implemented only in their later gated phases.
+## Current demo status
 
-## Install and validate
+Phase 2 is complete. The repository currently provides a demo-ready local chat
+MVP using a deterministic in-process fake provider. It does **not** invoke
+Codex CLI or Claude Code yet.
+
+The demo supports:
+
+- local rooms and persistent SQLite history;
+- `@fakeA`, `@fakeB`, and `@all` fan-out;
+- streamed output, cancellation, partial responses, and retry;
+- reconnect replay, context inspection, FTS search, and JSON/Markdown export;
+- loopback-only HTTP/WebSocket communication.
+
+The next gated work is the Codex Personal Mode adapter. See
+[project status](docs/STATUS.md) and [the Phase 3 specification](docs/phases/PHASE-3-codex.md).
+
+## Install, validate, and run the demo
 
 Requirements: Node.js 22.14 or newer within the 22.x line, and pnpm 11.9.0.
 
@@ -21,27 +37,37 @@ pnpm build
 pnpm dev
 ~~~
 
-The application binds its server only to 127.0.0.1. The Phase 1 UI reports
-whether the local server is ready; it is not a chat UI yet. Runtime data is
-created only when the server runs, outside the repository by default, or at the
-non-secret directory selected with MODELS_ROUNDTABLE_DATA_DIR.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The API server binds only
+to `127.0.0.1:4317`; Vite proxies `/api` requests during development. Press
+`Ctrl+C` in the terminal to stop both processes.
+
+Runtime data is stored outside the repository by default at
+`~/.roundtable-data`. To choose a different local directory, set
+`MODELS_ROUNDTABLE_DATA_DIR` before starting the server; do not point it at the
+repository. See [.env.example](.env.example).
+
+## Product boundary
+
+- Personal Mode may wrap official Codex CLI and Claude Code CLI installations
+  already authenticated by the machine owner.
+- Provider credentials remain in provider-owned credential stores and are never
+  copied into the application database.
+- Real Codex integration is blocked until an owner-interactive Phase 0 re-probe
+  produces a GO/GO WITH LIMITATIONS decision and sanitized fixtures. Follow the
+  [provider probe runbook](spikes/provider-probe/README.md).
+- Skills, `AGENTS.md`/`CLAUDE.md` projection, and workspace permissions are
+  Phase 5 work; release hardening is Phase 6; human collaboration is Phase 7.
+- The product remains local-only, read-only by default, and single-owner until
+  those later gates are completed.
 
 ## Implementation workflow
 
 1. Read [PROJECT_RULES.md](PROJECT_RULES.md).
 2. Read [docs/INDEX.md](docs/INDEX.md).
-3. Check [docs/STATUS.md](docs/STATUS.md) for the active phase.
-4. Give the next model [docs/NEXT_AGENT_PROMPT.md](docs/NEXT_AGENT_PROMPT.md), or use it as the task brief.
+3. Check [docs/STATUS.md](docs/STATUS.md) for the active phase and blockers.
+4. Use [docs/NEXT_AGENT_PROMPT.md](docs/NEXT_AGENT_PROMPT.md) as the next-agent brief.
 5. Execute exactly one phase from [docs/phases/](docs/phases/).
-6. Record decisions and handoff notes before stopping.
-
-## Product boundary
-
-- Personal Mode may wrap official Codex CLI and Claude Code CLI installations already authenticated by the machine owner.
-- Provider credentials remain in provider-owned credential stores and are never copied into the application database.
-- Claude subscription authentication is not a supported distribution mechanism for a third-party product. The Claude subscription adapter is a personal/local experiment only unless Anthropic provides approval.
-- The first release is local-only, read-only by default, and single-owner.
-- Human collaboration, LAN access, write access, and Git worktree isolation arrive only in later gated phases.
+6. Record decisions and a handoff before stopping.
 
 ## Blueprint map
 
@@ -56,10 +82,4 @@ non-secret directory selected with MODELS_ROUNDTABLE_DATA_DIR.
 - UX: `docs/09-frontend-ux.md`
 - Quality/operations: `docs/10-testing.md`, `docs/11-operations.md`
 - Execution: `docs/12-roadmap.md`, `docs/phases/`
-- Risks/legal: `docs/13-risks-and-policy.md`
-- Architectural decisions: `docs/decisions/`
-
-## Status
-
-Planning is complete and Phase 1 is implemented. Continue only from the active
-phase recorded in [docs/STATUS.md](docs/STATUS.md).
+- Risks/policy: `docs/13-risks-and-policy.md`
