@@ -48,6 +48,9 @@ provider demo.
 - Added server integration coverage proving first `@codex` dispatch uses
   `start`, persists the opaque provider session, and the next dispatch uses
   `continue`; both requests retain `workspace_read`.
+- Added a reusable adapter contract exerciser in `test-support`; Fake passes
+  successful start/resume scenarios and Codex passes safe pre-spawn failure
+  scenarios without invoking the real CLI.
 
 ## Files changed
 
@@ -60,6 +63,8 @@ provider demo.
 - `packages/provider-codex/src/owner-smoke.ts`: guarded real-adapter smoke runner.
 - `packages/provider-codex/SMOKE.md`: owner-only, opt-in smoke procedure.
 - `packages/core/src/run-supervisor.ts`: provider registry routing.
+- `packages/test-support/src/provider-adapter-contract.ts`: shared adapter
+  contract invariants.
 - `packages/db/src/rooms.ts`: adapter-aware profiles, queues, and sessions.
 - `apps/server/src/app.ts`: authenticated Codex readiness endpoint.
 - `apps/web/src/App.tsx`: safe Codex readiness/version display.
@@ -85,7 +90,8 @@ provider demo.
 | Owner invalid resume | Pass | `no rollout found`, code `-32600` |
 | Owner Ctrl+C | Pass | Exit code `-1`, workspace empty |
 | `pnpm --filter @models-roundtable/provider-codex run build` | Pass | Run after restoring locked dependencies |
-| `pnpm --filter @models-roundtable/provider-codex test` | Pass | Focused run passed; full gate: 2 files, 12 tests |
+| `pnpm --filter @models-roundtable/provider-codex test` | Pass | Shared contract included; focused run: 2 files, 14 tests |
+| `pnpm --filter @models-roundtable/provider-fake test` | Pass | Shared contract included; focused run: 2 files, 4 tests |
 | `pnpm --filter @models-roundtable/core test` | Pass | Full gate: 6 files, 12 tests |
 | `pnpm --filter @models-roundtable/server test` | Pass | Focused run: 2 files, 7 tests; full gate: 2 files, 8 tests |
 | Owner smoke without attestation | Pass | Refused before any provider call with an allowlisted error |
@@ -97,9 +103,9 @@ provider demo.
 
 ## Acceptance checklist
 
-- [x] Shared adapter contract suite passes. Provider registry and Codex package tests pass.
+- [x] Shared adapter contract suite passes. Reusable test-support exerciser runs against Fake success and Codex safe-failure paths.
 - [x] All captured/synthetic Codex fixtures pass incremental parser tests. Fixture normalization tests pass.
-- [ ] Real smoke: start, stream, complete, resume, cancel in disposable read-only workspace. Owner manual transport probes pass, but app-owned smoke is not implemented.
+- [ ] Real smoke: start, stream, complete, resume, cancel in disposable read-only workspace. Owner manual transport probes pass and the guarded app-owned runner is implemented, but the owner has not run it yet.
 - [x] App remains usable when Codex is missing/logged out/incompatible. Bounded probe returns safe states and fake E2E passes.
 - [x] No credentials/environment dumps/raw sensitive stderr reach DB/log/browser/export. The adapter keeps stderr bounded and emits only allowlisted messages.
 - [x] Existing fake-provider E2E remains unchanged and passing. Full test gate passes.
@@ -119,8 +125,6 @@ provider demo.
   installed CLI honors `-c sandbox_mode="read-only"` during resume.
 - The automated execution identity cannot run Codex; real provider smoke must
   be launched by the owner from an interactive terminal.
-- The current database schema/repository assumes adapter id `fake`; do not
-  route Codex through it until adapter identity is generalized.
 
 ## Exact next action
 

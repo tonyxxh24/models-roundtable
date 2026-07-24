@@ -1,1 +1,5 @@
-export const testSupportStatus = "deferred-until-phase-2" as const;
+export { exerciseProviderAdapterContract } from "./provider-adapter-contract.js";
+export type {
+  AdapterContractResult,
+  AdapterContractScenario,
+} from "./provider-adapter-contract.js";

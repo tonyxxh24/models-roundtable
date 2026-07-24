@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ProviderRunHandle } from "@models-roundtable/contracts";
+import { exerciseProviderAdapterContract } from "@models-roundtable/test-support";
 import { describe, expect, it } from "vitest";
 import {
   buildCodexArguments,
@@ -29,6 +30,33 @@ function fixture(name: string): readonly unknown[] {
 }
 
 describe("Codex CLI 0.145.0 normalization", () => {
+  it("passes the shared adapter contract on safe pre-spawn failures", async () => {
+    const adapter = createCodexAdapter({
+      workingDirectory: join(process.cwd(), "missing-contract-workspace"),
+    });
+    const request = {
+      runId: "contract-run",
+      agentId: "contract-agent",
+      permission: "workspace_read" as const,
+      prompt: "contract prompt",
+      roomSequence: 1,
+    };
+    await expect(
+      exerciseProviderAdapterContract(adapter, { mode: "start", request }),
+    ).resolves.toMatchObject({
+      events: [{ type: "failed", code: "workspace_unavailable" }],
+    });
+    await expect(
+      exerciseProviderAdapterContract(adapter, {
+        mode: "continue",
+        request: { ...request, runId: "contract-resume-run" },
+        providerSessionId: "opaque-resume-session",
+      }),
+    ).resolves.toMatchObject({
+      events: [{ type: "failed", code: "provider_incompatible" }],
+    });
+  });
+
   it("builds shell-free read-only argv for start and verified resume", () => {
     expect(buildCodexArguments({ kind: "start" })).toEqual([
       "exec",

@@ -139,6 +139,10 @@ importers:
       '@models-roundtable/provider-base':
         specifier: workspace:*
         version: link:../provider-base
+    devDependencies:
+      '@models-roundtable/test-support':
+        specifier: workspace:*
+        version: link:../test-support
 
   packages/provider-fake:
     dependencies:
@@ -148,10 +152,18 @@ importers:
       '@models-roundtable/provider-base':
         specifier: workspace:*
         version: link:../provider-base
+    devDependencies:
+      '@models-roundtable/test-support':
+        specifier: workspace:*
+        version: link:../test-support
 
   packages/skills: {}
 
-  packages/test-support: {}
+  packages/test-support:
+    dependencies:
+      '@models-roundtable/contracts':
+        specifier: workspace:*
+        version: link:../contracts
 
   packages/workspace: {}
 

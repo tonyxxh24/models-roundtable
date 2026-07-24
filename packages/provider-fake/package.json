@@ -20,5 +20,8 @@
   "dependencies": {
     "@models-roundtable/contracts": "workspace:*",
     "@models-roundtable/provider-base": "workspace:*"
+  },
+  "devDependencies": {
+    "@models-roundtable/test-support": "workspace:*"
   }
 }
