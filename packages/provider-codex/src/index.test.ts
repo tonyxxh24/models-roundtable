@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ProviderRunHandle } from "@models-roundtable/contracts";
 import { describe, expect, it } from "vitest";
-import { createCodexAdapter, normalizeCodexEvent } from "./index.js";
+import {
+  createCodexAdapter,
+  normalizeCodexEvent,
+  probeCodexExecutable,
+} from "./index.js";
 
 function fixture(name: string): readonly unknown[] {
   return readFileSync(
@@ -24,6 +28,14 @@ function fixture(name: string): readonly unknown[] {
 }
 
 describe("Codex CLI 0.145.0 normalization", () => {
+  it("reports a missing executable without leaking process diagnostics", async () => {
+    await expect(
+      probeCodexExecutable("models-roundtable-missing-codex-executable"),
+    ).resolves.toEqual({
+      health: "missing",
+      safeMessage: "Codex CLI was not found on the server PATH.",
+    });
+  });
   it("maps the observed new-session fixture without exposing native identifiers", () => {
     const events = fixture("normal.sanitized.jsonl").flatMap(
       normalizeCodexEvent,

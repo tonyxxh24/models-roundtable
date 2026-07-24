@@ -11,6 +11,7 @@ import {
   connectRoomRealtime,
   createRoom,
   fetchActiveRuns,
+  fetchCodexReadiness,
   fetchHealth,
   fetchMessages,
   fetchRunContext,
@@ -18,6 +19,7 @@ import {
   retryRun,
   sendMessage,
   type ActiveRun,
+  type ProviderReadiness,
   type RoomMessage,
   type RoomSummary,
   type RunContext,
@@ -64,6 +66,7 @@ export interface ChatViewProps {
   readonly onRetryRun: (runId: string) => void;
   readonly streamingTextByRun: Readonly<Record<string, string>>;
   readonly onCreateRoom: () => void;
+  readonly codexReadiness?: ProviderReadiness | undefined;
 }
 
 export function ChatView({
@@ -82,6 +85,7 @@ export function ChatView({
   onRetryRun,
   streamingTextByRun,
   onCreateRoom,
+  codexReadiness,
 }: ChatViewProps): ReactElement {
   return (
     <main className="chat-layout">
@@ -111,6 +115,15 @@ export function ChatView({
           <p className="eyebrow">Local deterministic room</p>
           <h1>{room.title}</h1>
           <p>Participants: @owner, @fakeA, @fakeB, @all</p>
+          <p role="status">
+            Codex: {codexReadiness?.health ?? "checking"}
+            {codexReadiness?.providerVersion === undefined
+              ? ""
+              : " (" + codexReadiness.providerVersion + ")"}
+            {codexReadiness === undefined
+              ? ""
+              : " — " + codexReadiness.safeMessage}
+          </p>
           <div role="status" aria-live="polite" aria-label="Active runs">
             {activeRuns.map((run) => (
               <p key={run.runId}>
@@ -226,6 +239,7 @@ export default function App(): ReactElement {
   const [streamingTextByRun, setStreamingTextByRun] = useState<
     Readonly<Record<string, string>>
   >({});
+  const [codexReadiness, setCodexReadiness] = useState<ProviderReadiness>();
 
   useEffect(() => {
     let active = true;
@@ -233,7 +247,10 @@ export default function App(): ReactElement {
       try {
         await fetchHealth();
         await bootstrapSession();
-        const rooms = await listRooms();
+        const [rooms, codex] = await Promise.all([
+          listRooms(),
+          fetchCodexReadiness(),
+        ]);
         const selected = rooms[0] ?? (await createRoom("First roundtable"));
         const timeline = await fetchMessages(selected.roomId);
         const running = await fetchActiveRuns(selected.roomId);
@@ -242,6 +259,7 @@ export default function App(): ReactElement {
           setRoom(selected);
           setMessages(timeline);
           setActiveRuns(running);
+          setCodexReadiness(codex);
           setState("ready");
         }
       } catch (error: unknown) {
@@ -402,6 +420,7 @@ export default function App(): ReactElement {
             setDetail(error instanceof Error ? error.message : "unknown error");
           });
       }}
+      codexReadiness={codexReadiness}
     />
   );
 }

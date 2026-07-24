@@ -18,6 +18,7 @@
     "@models-roundtable/core": "workspace:*",
     "@models-roundtable/db": "workspace:*",
     "@models-roundtable/provider-fake": "workspace:*",
+    "@models-roundtable/provider-codex": "workspace:*",
     "fastify": "5.10.0"
   },
   "devDependencies": {

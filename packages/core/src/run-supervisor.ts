@@ -11,6 +11,7 @@ export interface QueuedRunWork {
   readonly targetParticipantId: string;
   readonly prompt: string;
   readonly inputRoomSequence: number;
+  readonly adapterId: string;
   readonly providerSessionId?: string | undefined;
 }
 
@@ -31,7 +32,7 @@ export interface RunOutcome {
 
 export function createRunSupervisor(
   queue: RunQueuePort,
-  adapter: ProviderAdapter,
+  adapters: ReadonlyMap<string, ProviderAdapter>,
 ): {
   drainQueued(): Promise<readonly RunOutcome[]>;
   cancel(runId: string): Promise<boolean>;
@@ -59,6 +60,21 @@ export function createRunSupervisor(
     };
 
     try {
+      const adapter = adapters.get(work.adapterId);
+      if (adapter === undefined) {
+        queue.recordProviderEvent(work.runId, {
+          type: "failed",
+          code: "provider_missing",
+          safeMessage: "The selected local provider is not available.",
+          retryable: false,
+        });
+        queue.transitionRun({
+          runId: work.runId,
+          from: "starting",
+          to: "failed",
+        });
+        return { runId: work.runId, state: "failed" };
+      }
       const handle =
         work.providerSessionId === undefined
           ? await adapter.start(request)

@@ -119,6 +119,7 @@ describe("SQLite database initialization", () => {
     expect(first.roomSequence).toBe(4);
     expect(first.runIds).toHaveLength(2);
     const queuedRuns = database.rooms.listQueuedRuns();
+    expect(queuedRuns.every((run) => run.adapterId === "fake")).toBe(true);
     expect(queuedRuns.map((run) => run.runId).sort()).toEqual(
       [...first.runIds].sort(),
     );

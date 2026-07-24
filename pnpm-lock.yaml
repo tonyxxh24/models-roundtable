@@ -50,6 +50,9 @@ importers:
       '@models-roundtable/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@models-roundtable/provider-codex':
+        specifier: workspace:*
+        version: link:../../packages/provider-codex
       '@models-roundtable/provider-fake':
         specifier: workspace:*
         version: link:../../packages/provider-fake

@@ -14,6 +14,7 @@ describe("provider-neutral run supervisor", () => {
           targetParticipantId: "fake-a",
           prompt: "hello",
           inputRoomSequence: 2,
+          adapterId: "fake",
         },
       ],
       transitionRun: (input) => {
@@ -25,20 +26,28 @@ describe("provider-neutral run supervisor", () => {
       },
       recordProviderEvent: (_runId, event) => events.push(event),
     };
-    const supervisor = createRunSupervisor(queue, {
-      id: "fake",
-      start: async () => ({
-        runToken: "fake:run-1",
-        events: (async function* () {
-          yield { type: "text_delta", text: "hello" } as const;
-          yield { type: "completed", finalText: "hello" } as const;
-        })(),
-        cancel: async () => undefined,
-      }),
-      continue: async () => {
-        throw new Error("not used");
-      },
-    });
+    const supervisor = createRunSupervisor(
+      queue,
+      new Map([
+        [
+          "fake",
+          {
+            id: "fake",
+            start: async () => ({
+              runToken: "fake:run-1",
+              events: (async function* () {
+                yield { type: "text_delta", text: "hello" } as const;
+                yield { type: "completed", finalText: "hello" } as const;
+              })(),
+              cancel: async () => undefined,
+            }),
+            continue: async () => {
+              throw new Error("not used");
+            },
+          },
+        ],
+      ]),
+    );
 
     await expect(supervisor.drainQueued()).resolves.toEqual([
       { runId: "run-1", state: "completed" },
@@ -70,6 +79,7 @@ describe("provider-neutral run supervisor", () => {
           targetParticipantId: "fake-a",
           prompt: "stream",
           inputRoomSequence: 3,
+          adapterId: "fake",
         },
       ],
       transitionRun: (input) => {
@@ -85,22 +95,30 @@ describe("provider-neutral run supervisor", () => {
         }
       },
     };
-    const supervisor = createRunSupervisor(queue, {
-      id: "fake",
-      start: async () => ({
-        runToken: "fake:run-cancel",
-        events: (async function* () {
-          yield { type: "text_delta", text: "partial" } as const;
-          await providerReleased;
-        })(),
-        cancel: async () => {
-          releaseProvider?.();
-        },
-      }),
-      continue: async () => {
-        throw new Error("not used");
-      },
-    });
+    const supervisor = createRunSupervisor(
+      queue,
+      new Map([
+        [
+          "fake",
+          {
+            id: "fake",
+            start: async () => ({
+              runToken: "fake:run-cancel",
+              events: (async function* () {
+                yield { type: "text_delta", text: "partial" } as const;
+                await providerReleased;
+              })(),
+              cancel: async () => {
+                releaseProvider?.();
+              },
+            }),
+            continue: async () => {
+              throw new Error("not used");
+            },
+          },
+        ],
+      ]),
+    );
 
     const draining = supervisor.drainQueued();
     await deltaSeen;

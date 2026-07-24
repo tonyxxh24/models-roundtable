@@ -16,6 +16,7 @@ export interface RoomRepository {
     readonly roomId: string;
     readonly handle: string;
     readonly displayName: string;
+    readonly adapterId?: string;
   }): { readonly participantId: string };
   sendHumanMessage(input: {
     readonly roomId: string;
@@ -72,6 +73,7 @@ export interface QueuedRun {
   readonly prompt: string;
   readonly inputRoomSequence: number;
   readonly contextSnapshotId: string;
+  readonly adapterId: string;
   readonly providerSessionId?: string | undefined;
 }
 
@@ -238,11 +240,18 @@ export function createRoomRepository(
         if (room === undefined) {
           throw new Error("Room does not exist.");
         }
+        const adapterId = input.adapterId ?? "fake";
         database
           .prepare(
-            "INSERT INTO agent_profiles (id, name, adapter_id, permission_profile, created_at, updated_at) VALUES (?, ?, 'fake', 'chat_only', ?, ?)",
+            "INSERT INTO agent_profiles (id, name, adapter_id, permission_profile, created_at, updated_at) VALUES (?, ?, ?, 'chat_only', ?, ?)",
           )
-          .run(agentProfileId, input.displayName, createdAt, createdAt);
+          .run(
+            agentProfileId,
+            input.displayName,
+            adapterId,
+            createdAt,
+            createdAt,
+          );
         database
           .prepare(
             "INSERT INTO participants (id, room_id, kind, handle, handle_normalized, display_name, agent_profile_id, created_at, updated_at) VALUES (?, ?, 'agent', ?, ?, ?, ?, ?, ?)",
@@ -497,7 +506,7 @@ export function createRoomRepository(
     listQueuedRuns() {
       const rows = database
         .prepare(
-          "SELECT runs.id AS runId, runs.room_id AS roomId, runs.target_participant_id AS targetParticipantId, messages.body_markdown AS prompt, runs.input_room_sequence AS inputRoomSequence, runs.context_snapshot_id AS contextSnapshotId, provider_sessions.external_session_id AS providerSessionId FROM runs JOIN messages ON messages.id = runs.trigger_message_id JOIN participants ON participants.id = runs.target_participant_id LEFT JOIN provider_sessions ON provider_sessions.agent_profile_id = participants.agent_profile_id AND provider_sessions.state = 'active' WHERE runs.state = 'queued' ORDER BY runs.queued_at, runs.id",
+          "SELECT runs.id AS runId, runs.room_id AS roomId, runs.target_participant_id AS targetParticipantId, messages.body_markdown AS prompt, runs.input_room_sequence AS inputRoomSequence, runs.context_snapshot_id AS contextSnapshotId, agent_profiles.adapter_id AS adapterId, provider_sessions.external_session_id AS providerSessionId FROM runs JOIN messages ON messages.id = runs.trigger_message_id JOIN participants ON participants.id = runs.target_participant_id JOIN agent_profiles ON agent_profiles.id = participants.agent_profile_id LEFT JOIN provider_sessions ON provider_sessions.agent_profile_id = participants.agent_profile_id AND provider_sessions.adapter_id = agent_profiles.adapter_id AND provider_sessions.state = 'active' WHERE runs.state = 'queued' ORDER BY runs.queued_at, runs.id",
         )
         .all() as readonly (Omit<QueuedRun, "providerSessionId"> & {
         readonly providerSessionId: string | null;
@@ -643,21 +652,31 @@ export function createRoomRepository(
           if (profile === undefined) {
             throw new Error("Run target has no agent profile.");
           }
+          const adapter = database
+            .prepare(
+              "SELECT agent_profiles.adapter_id AS adapterId FROM participants JOIN agent_profiles ON agent_profiles.id = participants.agent_profile_id WHERE participants.id = ?",
+            )
+            .get(run.target_participant_id) as
+            { readonly adapterId: string } | undefined;
+          if (adapter === undefined) {
+            throw new Error("Run target has no provider adapter.");
+          }
           const existing = database
             .prepare(
-              "SELECT id FROM provider_sessions WHERE adapter_id = 'fake' AND external_session_id = ?",
+              "SELECT id FROM provider_sessions WHERE adapter_id = ? AND external_session_id = ?",
             )
-            .get(event.providerSessionId) as
+            .get(adapter.adapterId, event.providerSessionId) as
             { readonly id: string } | undefined;
           const providerSessionId = existing?.id ?? randomUUID();
           if (existing === undefined) {
             database
               .prepare(
-                "INSERT INTO provider_sessions (id, agent_profile_id, adapter_id, external_session_id, state, created_at, last_used_at) VALUES (?, ?, 'fake', ?, 'active', ?, ?)",
+                "INSERT INTO provider_sessions (id, agent_profile_id, adapter_id, external_session_id, state, created_at, last_used_at) VALUES (?, ?, ?, ?, 'active', ?, ?)",
               )
               .run(
                 providerSessionId,
                 profile.agentProfileId,
+                adapter.adapterId,
                 event.providerSessionId,
                 occurredAt,
                 occurredAt,

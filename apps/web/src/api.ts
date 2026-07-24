@@ -79,6 +79,17 @@ export interface ActiveRun {
   readonly state: "queued" | "starting" | "running";
 }
 
+export interface ProviderReadiness {
+  readonly health: "ready" | "missing" | "incompatible" | "error";
+  readonly providerVersion?: string;
+  readonly capabilityHash?: string;
+  readonly safeMessage: string;
+}
+
+export function fetchCodexReadiness(): Promise<ProviderReadiness> {
+  return jsonRequest<ProviderReadiness>("/api/v1/providers/codex");
+}
+
 export interface SendMessageResult {
   readonly messageId: string;
   readonly roomSequence: number;

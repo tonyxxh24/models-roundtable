@@ -3,7 +3,9 @@ import {
   spawn,
   type ChildProcessWithoutNullStreams,
 } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, statSync } from "node:fs";
+import { promisify } from "node:util";
 import {
   type ProviderAdapter,
   type ProviderEvent,
@@ -17,6 +19,74 @@ import {
 
 const maximumDiagnosticBytes = 8 * 1024;
 const gracefulCancellationTimeoutMs = 1_500;
+const execFileAsync = promisify(execFile);
+
+export interface CodexProbeResult {
+  readonly health: "ready" | "missing" | "incompatible" | "error";
+  readonly providerVersion?: string;
+  readonly capabilityHash?: string;
+  readonly safeMessage: string;
+}
+
+export async function probeCodexExecutable(
+  executable = "codex",
+): Promise<CodexProbeResult> {
+  try {
+    const version = await execFileAsync(executable, ["--version"], {
+      timeout: 3_000,
+      windowsHide: true,
+      maxBuffer: 16 * 1024,
+    });
+    const help = await execFileAsync(executable, ["exec", "--help"], {
+      timeout: 3_000,
+      windowsHide: true,
+      maxBuffer: 64 * 1024,
+    });
+    const providerVersion = /codex-cli\s+([0-9]+(?:\.[0-9]+)+)/u.exec(
+      version.stdout,
+    )?.[1];
+    const required = [
+      "--sandbox",
+      "read-only",
+      "--json",
+      "--skip-git-repo-check",
+    ];
+    if (
+      providerVersion === undefined ||
+      !required.every((flag) => help.stdout.includes(flag))
+    ) {
+      return {
+        health: "incompatible",
+        safeMessage:
+          "Codex CLI is installed but lacks required read-only JSONL capabilities.",
+      };
+    }
+    const capabilityHash = createHash("sha256")
+      .update(JSON.stringify({ providerVersion, required }))
+      .digest("hex");
+    return {
+      health: "ready",
+      providerVersion,
+      capabilityHash,
+      safeMessage:
+        "Codex CLI is ready for owner-authenticated read-only sessions.",
+    };
+  } catch (error: unknown) {
+    const code =
+      typeof error === "object" && error !== null && "code" in error
+        ? String(error.code)
+        : "";
+    return code === "ENOENT"
+      ? {
+          health: "missing",
+          safeMessage: "Codex CLI was not found on the server PATH.",
+        }
+      : {
+          health: "error",
+          safeMessage: "Codex CLI could not be probed by this local process.",
+        };
+  }
+}
 
 export interface CodexAdapterOptions {
   readonly executable?: string;

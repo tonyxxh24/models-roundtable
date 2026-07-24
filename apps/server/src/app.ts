@@ -20,6 +20,7 @@ import {
 } from "@models-roundtable/core";
 import type { DatabaseHandle } from "@models-roundtable/db";
 import { createFakeAdapter } from "@models-roundtable/provider-fake";
+import { probeCodexExecutable } from "@models-roundtable/provider-codex";
 import Fastify, {
   type FastifyInstance,
   type FastifyReply,
@@ -52,6 +53,7 @@ interface PendingTextDelta {
 export interface ServerDependencies {
   readonly config: ServerConfig;
   readonly database: DatabaseHandle;
+  readonly codexProbe?: typeof probeCodexExecutable;
 }
 
 function requestId(request: FastifyRequest): string {
@@ -122,7 +124,7 @@ export async function buildServer(
         publishTransientProviderEvent(runId, event);
       },
     },
-    fakeAdapter,
+    new Map([[fakeAdapter.id, fakeAdapter]]),
   );
 
   function sendRealtime<T extends object>(
@@ -381,6 +383,19 @@ export async function buildServer(
       protocolVersion: PROTOCOL_VERSION,
       session: "active",
     };
+  });
+
+  application.get("/api/v1/providers/codex", async (request, reply) => {
+    if (!hasSession(request)) {
+      return sendSafeError(
+        reply,
+        401,
+        "SESSION_REQUIRED",
+        "A local bootstrap session is required.",
+        requestId(request),
+      );
+    }
+    return (dependencies.codexProbe ?? probeCodexExecutable)();
   });
 
   function hasSession(request: FastifyRequest): boolean {

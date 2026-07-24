@@ -30,6 +30,10 @@ provider demo.
 - Implemented safe spawn, stdin prompt delivery, bounded stderr classification,
   and owned-child cancellation escalation.
 - Added fixture and permission-boundary tests.
+- Generalized queued runs, session persistence, and core supervision by
+  `adapterId` while preserving fake-provider defaults.
+- Added a bounded version/help readiness probe, authenticated local API, and
+  frontend status display. Tests inject the probe and never call real Codex.
 
 ## Files changed
 
@@ -40,6 +44,11 @@ provider demo.
 - `packages/provider-codex/src/index.ts`: safe Codex CLI adapter.
 - `packages/provider-codex/src/index.test.ts`: fixture and boundary tests.
 - `packages/provider-codex/SMOKE.md`: owner-only, opt-in smoke procedure.
+- `packages/core/src/run-supervisor.ts`: provider registry routing.
+- `packages/db/src/rooms.ts`: adapter-aware profiles, queues, and sessions.
+- `apps/server/src/app.ts`: authenticated Codex readiness endpoint.
+- `apps/web/src/App.tsx`: safe Codex readiness/version display.
+- `package.json`: cross-platform Prettier line-ending check.
 - `packages/provider-codex/package.json`, `pnpm-lock.yaml`: local contracts dependency.
 
 ## Decisions and deviations
@@ -64,22 +73,25 @@ provider demo.
 | `pnpm --filter @models-roundtable/provider-codex run build` | Pass | Run after restoring locked dependencies |
 | `pnpm --filter @models-roundtable/provider-codex test` | Pass | 2 files, 8 tests |
 | `pnpm --filter @models-roundtable/provider-codex typecheck` | Pass | No TypeScript errors |
-| Full phase gate | Not run | Server integration and real app smoke remain incomplete |
+| `pnpm lint` | Pass | ESLint and cross-platform Prettier check pass |
+| `pnpm typecheck` | Pass | All packages and apps pass |
+| `pnpm test` | Pass | Includes fake E2E and Codex fixture/probe tests |
+| `pnpm build` | Pass | All packages and apps build |
 
 ## Acceptance checklist
 
-- [ ] Shared adapter contract suite passes. Package-level Codex suite passes; full suite waits on integration.
+- [x] Shared adapter contract suite passes. Provider registry and Codex package tests pass.
 - [x] All captured/synthetic Codex fixtures pass incremental parser tests. Fixture normalization tests pass.
 - [ ] Real smoke: start, stream, complete, resume, cancel in disposable read-only workspace. Owner manual transport probes pass, but app-owned smoke is not implemented.
-- [x] App remains usable when Codex is missing/logged out/incompatible. Adapter returns safe failures; fake app remains unchanged.
+- [x] App remains usable when Codex is missing/logged out/incompatible. Bounded probe returns safe states and fake E2E passes.
 - [x] No credentials/environment dumps/raw sensitive stderr reach DB/log/browser/export. The adapter keeps stderr bounded and emits only allowlisted messages.
-- [ ] Existing fake-provider E2E remains unchanged and passing. Not rerun after this work.
-- [ ] Provider update/schema drift yields controlled adapter error, not server crash. Unknown event fixture is covered; integration is still needed.
-- [ ] Exact tested Codex version/capability hash recorded in handoff. Version recorded; runtime probe capability hash is not yet exposed by a server diagnostics surface.
+- [x] Existing fake-provider E2E remains unchanged and passing. Full test gate passes.
+- [x] Provider update/schema drift yields controlled adapter error, not server crash. Unknown events are tolerated and missing capability flags report incompatible.
+- [x] Exact tested Codex version/capability hash recorded in handoff. `0.145.0`, `0b640f0edcaa239a2e095afab04dbb28c900202737f5d75200e433e943dceee8`.
 
 ## Provider evidence
 
-- Provider/version/capability hash: Codex CLI `0.145.0`; capability hash pending diagnostics integration.
+- Provider/version/capability hash: Codex CLI `0.145.0`; `0b640f0edcaa239a2e095afab04dbb28c900202737f5d75200e433e943dceee8`.
 - Real-provider calls performed: owner-only new, resume, invalid session, denied write, and Ctrl+C probes in an empty temporary workspace.
 - Fixture sanitization performed: session/item IDs replaced with placeholders; raw JSONL, prompts, paths, and account details excluded.
 - Authentication/permission boundary observations: owner login remains external; no credentials were inspected; bypass flags are forbidden.

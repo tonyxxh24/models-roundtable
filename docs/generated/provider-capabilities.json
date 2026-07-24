@@ -46,6 +46,7 @@
       "adapterId": "codex",
       "decision": "GO_WITH_LIMITATIONS",
       "providerVersion": "0.145.0",
+      "capabilityHash": "0b640f0edcaa239a2e095afab04dbb28c900202737f5d75200e433e943dceee8",
       "requiredInvocation": {
         "exec": true,
         "stdinPrompt": true,

@@ -45,6 +45,12 @@ describe("local server security shell", () => {
     const server = await buildServer({
       config: testConfig(dataDirectory),
       database,
+      codexProbe: async () => ({
+        health: "ready",
+        providerVersion: "0.145.0",
+        capabilityHash: "test-capability-hash",
+        safeMessage: "Codex CLI is ready for tests.",
+      }),
     });
 
     const health = await server.inject({
@@ -79,6 +85,18 @@ describe("local server security shell", () => {
       headers: { cookie: cookieHeader as string },
     });
     expect(session.statusCode).toBe(200);
+
+    const codexReadiness = await server.inject({
+      method: "GET",
+      url: "/api/v1/providers/codex",
+      headers: { cookie: cookieHeader as string },
+    });
+    expect(codexReadiness.statusCode).toBe(200);
+    expect(codexReadiness.json()).toMatchObject({
+      health: "ready",
+      providerVersion: "0.145.0",
+      capabilityHash: "test-capability-hash",
+    });
 
     const createRoom = await server.inject({
       method: "POST",
