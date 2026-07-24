@@ -1,0 +1,26 @@
+{
+  "name": "@models-roundtable/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cookie": "11.1.2",
+    "@fastify/static": "10.1.2",
+    "@fastify/websocket": "11.3.0",
+    "@models-roundtable/contracts": "workspace:*",
+    "@models-roundtable/core": "workspace:*",
+    "@models-roundtable/db": "workspace:*",
+    "@models-roundtable/provider-fake": "workspace:*",
+    "fastify": "5.10.0"
+  },
+  "devDependencies": {
+    "tsx": "4.23.1"
+  }
+}
