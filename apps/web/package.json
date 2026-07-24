@@ -1,0 +1,27 @@
+{
+  "name": "@models-roundtable/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "dev": "vite",
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@models-roundtable/contracts": "workspace:*",
+    "@vitejs/plugin-react": "6.0.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "vite": "8.1.5"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^28.0.3",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "axe-core": "^4.12.1",
+    "jsdom": "^29.1.1"
+  }
+}
