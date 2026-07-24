@@ -18,6 +18,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@models-roundtable/contracts": "workspace:*",
     "@models-roundtable/provider-base": "workspace:*"
   }
 }

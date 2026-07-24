@@ -1,0 +1,3 @@
+{"type":"thread.started","thread_id":"<SESSION_ID>"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"<ITEM_ID>","type":"agent_message","text":"PHASE0_NEW_OK"}}

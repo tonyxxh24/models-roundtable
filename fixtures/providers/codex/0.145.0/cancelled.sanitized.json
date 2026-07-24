@@ -1,0 +1,7 @@
+{
+  "observedEvents": ["thread.started", "turn.started"],
+  "trigger": "owner sent Ctrl+C to the owned codex exec process",
+  "exitCode": -1,
+  "workspaceChanged": false,
+  "terminalProviderEventObserved": false
+}

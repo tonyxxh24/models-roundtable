@@ -5,10 +5,10 @@ Last updated: 2026-07-24
 ## Current state
 
 - Lifecycle: Phase 2 complete; the provider-neutral local chat MVP passes its full gate.
-- Active phase: `PHASE-3-codex` (blocked at precondition).
+- Active phase: `PHASE-3-codex` (in progress).
 - Active branch: not established.
 - Latest completed phase: Phase 2 - Local chat with deterministic fake provider.
-- Blocking issues: Phase 3 requires a GO/GO WITH LIMITATIONS Codex capability report and sanitized Codex fixtures; Phase 0 could not execute Codex under the automated Windows identity.
+- Blocking issues: None for Phase 3. Real Codex smoke tests remain owner-terminal-only because the automated Windows identity cannot execute the CLI.
 
 ## Phase ledger
 
@@ -17,7 +17,7 @@ Last updated: 2026-07-24
 | 0 - Provider feasibility spike | Complete | Codex | Claude GO with limitations; Codex blocked by current agent execution ACL |
 | 1 - Repository foundation | Complete | Codex | Frozen install, all gates, migration, and loopback evidence are in the 2026-07-24 Phase 1 handoff |
 | 2 - Local chat with fake provider | Complete | Codex | Durable multi-agent fake chat, replay/stream/cancel/retry, search/export, context inspection, recovery, accessibility, and all gates pass |
-| 3 - Codex Personal Mode adapter | Blocked | Codex | Active phase; requires owner-interactive Codex Phase 0 re-probe, GO decision, and sanitized fixtures |
+| 3 - Codex Personal Mode adapter | In progress | Codex | Owner-interactive Codex CLI 0.145.0 probe is GO WITH LIMITATIONS; adapter implementation is active |
 | 4 - Claude Personal Mode adapter | Blocked | - | Personal/local boundary only |
 | 5 - Skills, instructions, workspace permissions | Blocked | - | Requires both adapters stable |
 | 6 - Reliability and release candidate | Blocked | - | Local single-owner release |

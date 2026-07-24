@@ -44,22 +44,37 @@
     },
     {
       "adapterId": "codex",
-      "decision": "NO_GO_CURRENT_AGENT_ENVIRONMENT",
-      "providerVersion": null,
+      "decision": "GO_WITH_LIMITATIONS",
+      "providerVersion": "0.145.0",
+      "requiredInvocation": {
+        "exec": true,
+        "stdinPrompt": true,
+        "streamJson": true,
+        "sandbox": "read-only",
+        "skipGitRepoCheck": true
+      },
       "capabilities": {
-        "streamingJson": false,
-        "sessionIdEvent": false,
-        "resumeSession": false,
+        "streamingJson": true,
+        "sessionIdEvent": true,
+        "resumeSession": true,
         "cwdArgument": false,
-        "readOnlyMode": false,
+        "readOnlyMode": true,
         "approvalEvents": false,
         "structuredToolEvents": false,
         "imageInput": false,
-        "gracefulCancel": false
+        "gracefulCancel": true
       },
+      "verifiedBy": [
+        "normal.sanitized.jsonl",
+        "resume.sanitized.jsonl",
+        "invalid-session.stderr.txt",
+        "cancelled.sanitized.json"
+      ],
       "limitations": [
-        "The installed desktop-app executable could be discovered but not executed by this agent identity; Windows access denied before CLI output.",
-        "Re-probe from the owner's interactive terminal before implementing provider-codex."
+        "Evidence was collected only from the owner's interactive terminal; the automated agent identity remains unable to execute the CLI.",
+        "No explicit Codex cwd argument was observed. The adapter must set the child process cwd and must not invent a CLI flag.",
+        "Tools, approvals, images, and workspace-write remain unverified and disabled.",
+        "Ctrl+C cancellation was observed for a CLI child, but application-owned Windows process-tree cancellation remains a Phase 3 smoke-test requirement."
       ]
     }
   ]

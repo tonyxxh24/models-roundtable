@@ -130,6 +130,9 @@ importers:
 
   packages/provider-codex:
     dependencies:
+      '@models-roundtable/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@models-roundtable/provider-base':
         specifier: workspace:*
         version: link:../provider-base

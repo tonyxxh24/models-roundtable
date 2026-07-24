@@ -14,5 +14,9 @@ The real event parser must handle incremental byte chunks. JSONL fixtures model 
 ## Current corpus
 
 - `claude/2.1.217`: observed safe probe outputs plus synthetic error/stderr case.
-- `codex/unavailable-in-agent-sandbox`: no CLI event data; documentation of the access block only.
+- `codex/0.145.0`: owner-interactive, read-only evidence for new session,
+  resume, invalid-session handling, and Ctrl+C cancellation. The per-version
+  README records provenance and placeholders.
+- `codex/unavailable-in-agent-sandbox`: historical documentation of the
+  automated-agent access block; it is not the owner-terminal result.
 - `common`: provider-neutral malformed/fragmented input cases.

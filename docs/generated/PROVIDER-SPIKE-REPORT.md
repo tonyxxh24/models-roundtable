@@ -9,9 +9,9 @@ Mode: Personal Mode only; no provider credentials were read, copied, or stored.
 | Adapter | Decision | Reason |
 |---|---|---|
 | Claude Code CLI | GO WITH LIMITATIONS | Streaming JSON, stdin, session capture/resume, validated `cwd`, plan-mode read-only behavior, and owned-child cleanup were observed on this machine. |
-| Codex CLI | NO-GO IN CURRENT AGENT ENVIRONMENT | The executable was discovered through the installed desktop App package, but this execution account received Windows `Access is denied` for `codex --version`, including an elevated read-only probe. CLI functionality was not tested and must be re-probed from the owner's interactive terminal or a process identity that can execute that package. |
+| Codex CLI | GO WITH LIMITATIONS | Owner-interactive validation of Codex CLI 0.145.0 proved `exec --json`, stdin prompt transport, read-only sandboxing, session resume, controlled invalid-session failure, and Ctrl+C cancellation in an empty temporary workspace. |
 
-Phase 1 is permitted because one real provider is viable and the fake adapter remains mandatory. A two-provider Personal Mode release remains blocked on a successful Codex compatibility probe.
+Phase 1 is permitted because one real provider is viable and the fake adapter remains mandatory. The owner-terminal Codex re-probe now satisfies the Phase 3 provider precondition; the automated agent identity's historical access denial remains an environment limitation only.
 
 ## Safe environment inventory
 
@@ -24,7 +24,7 @@ Phase 1 is permitted because one real provider is viable and the fake adapter re
 | Git Bash | Available |
 | WSL launcher | Available |
 | Claude Code | 2.1.217 |
-| Codex CLI | Installed through the Codex desktop application package; executable version unavailable to this agent identity |
+| Codex CLI | 0.145.0 (owner-interactive PowerShell) |
 
 Absolute executable paths, user profile paths, provider session IDs, account information, full tool inventories, and raw provider events are deliberately omitted.
 
