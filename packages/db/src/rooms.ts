@@ -1,5 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { ProviderEvent } from "@models-roundtable/contracts";
+import type {
+  PermissionProfile,
+  ProviderEvent,
+} from "@models-roundtable/contracts";
 import type Database from "better-sqlite3";
 
 const providerPromptCharacterLimit = 16_000;
@@ -17,6 +20,7 @@ export interface RoomRepository {
     readonly handle: string;
     readonly displayName: string;
     readonly adapterId?: string;
+    readonly permission?: PermissionProfile;
   }): { readonly participantId: string };
   sendHumanMessage(input: {
     readonly roomId: string;
@@ -74,6 +78,7 @@ export interface QueuedRun {
   readonly inputRoomSequence: number;
   readonly contextSnapshotId: string;
   readonly adapterId: string;
+  readonly permission: PermissionProfile;
   readonly providerSessionId?: string | undefined;
 }
 
@@ -241,14 +246,16 @@ export function createRoomRepository(
           throw new Error("Room does not exist.");
         }
         const adapterId = input.adapterId ?? "fake";
+        const permission = input.permission ?? "chat_only";
         database
           .prepare(
-            "INSERT INTO agent_profiles (id, name, adapter_id, permission_profile, created_at, updated_at) VALUES (?, ?, ?, 'chat_only', ?, ?)",
+            "INSERT INTO agent_profiles (id, name, adapter_id, permission_profile, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
           )
           .run(
             agentProfileId,
             input.displayName,
             adapterId,
+            permission,
             createdAt,
             createdAt,
           );
@@ -506,7 +513,7 @@ export function createRoomRepository(
     listQueuedRuns() {
       const rows = database
         .prepare(
-          "SELECT runs.id AS runId, runs.room_id AS roomId, runs.target_participant_id AS targetParticipantId, messages.body_markdown AS prompt, runs.input_room_sequence AS inputRoomSequence, runs.context_snapshot_id AS contextSnapshotId, agent_profiles.adapter_id AS adapterId, provider_sessions.external_session_id AS providerSessionId FROM runs JOIN messages ON messages.id = runs.trigger_message_id JOIN participants ON participants.id = runs.target_participant_id JOIN agent_profiles ON agent_profiles.id = participants.agent_profile_id LEFT JOIN provider_sessions ON provider_sessions.agent_profile_id = participants.agent_profile_id AND provider_sessions.adapter_id = agent_profiles.adapter_id AND provider_sessions.state = 'active' WHERE runs.state = 'queued' ORDER BY runs.queued_at, runs.id",
+          "SELECT runs.id AS runId, runs.room_id AS roomId, runs.target_participant_id AS targetParticipantId, messages.body_markdown AS prompt, runs.input_room_sequence AS inputRoomSequence, runs.context_snapshot_id AS contextSnapshotId, agent_profiles.adapter_id AS adapterId, agent_profiles.permission_profile AS permission, provider_sessions.external_session_id AS providerSessionId FROM runs JOIN messages ON messages.id = runs.trigger_message_id JOIN participants ON participants.id = runs.target_participant_id JOIN agent_profiles ON agent_profiles.id = participants.agent_profile_id LEFT JOIN provider_sessions ON provider_sessions.agent_profile_id = participants.agent_profile_id AND provider_sessions.adapter_id = agent_profiles.adapter_id AND provider_sessions.state = 'active' WHERE runs.state = 'queued' ORDER BY runs.queued_at, runs.id",
         )
         .all() as readonly (Omit<QueuedRun, "providerSessionId"> & {
         readonly providerSessionId: string | null;

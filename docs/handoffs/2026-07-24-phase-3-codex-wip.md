@@ -32,6 +32,8 @@ provider demo.
 - Added fixture and permission-boundary tests.
 - Generalized queued runs, session persistence, and core supervision by
   `adapterId` while preserving fake-provider defaults.
+- Propagated each agent profile's normalized permission through queued work to
+  the selected adapter; fake agents remain `chat_only` by default.
 - Added a bounded version/help readiness probe, authenticated local API, and
   frontend status display. Tests inject the probe and never call real Codex.
 

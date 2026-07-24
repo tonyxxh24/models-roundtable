@@ -1,4 +1,5 @@
 import type {
+  PermissionProfile,
   ProviderAdapter,
   ProviderEvent,
   ProviderRunHandle,
@@ -12,6 +13,7 @@ export interface QueuedRunWork {
   readonly prompt: string;
   readonly inputRoomSequence: number;
   readonly adapterId: string;
+  readonly permission: PermissionProfile;
   readonly providerSessionId?: string | undefined;
 }
 
@@ -54,7 +56,7 @@ export function createRunSupervisor(
     const request: ProviderRunRequest = {
       runId: work.runId,
       agentId: work.targetParticipantId,
-      permission: "chat_only",
+      permission: work.permission,
       prompt: work.prompt,
       roomSequence: work.inputRoomSequence,
     };

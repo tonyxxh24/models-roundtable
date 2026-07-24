@@ -15,6 +15,7 @@ describe("provider-neutral run supervisor", () => {
           prompt: "hello",
           inputRoomSequence: 2,
           adapterId: "fake",
+          permission: "chat_only",
         },
       ],
       transitionRun: (input) => {
@@ -80,6 +81,7 @@ describe("provider-neutral run supervisor", () => {
           prompt: "stream",
           inputRoomSequence: 3,
           adapterId: "fake",
+          permission: "chat_only",
         },
       ],
       transitionRun: (input) => {
