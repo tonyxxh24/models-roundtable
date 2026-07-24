@@ -1,0 +1,38 @@
+{
+  "description": "Synthetic transport cases for incremental JSONL decoders. Not provider observations.",
+  "cases": [
+    {
+      "name": "two_records_one_chunk",
+      "chunks": ["{\"type\":\"alpha\"}\n{\"type\":\"beta\"}\n"],
+      "expectedRecords": ["{\"type\":\"alpha\"}", "{\"type\":\"beta\"}"]
+    },
+    {
+      "name": "record_spanning_chunks",
+      "chunks": ["{\"type\":\"alpha\",\"text\":\"he", "llo\"}\n"],
+      "expectedRecords": ["{\"type\":\"alpha\",\"text\":\"hello\"}"]
+    },
+    {
+      "name": "crlf",
+      "chunks": ["{\"type\":\"alpha\"}\r\n"],
+      "expectedRecords": ["{\"type\":\"alpha\"}"]
+    },
+    {
+      "name": "fragmented_utf8",
+      "encoding": "utf-8",
+      "chunksBase64": ["eyJ0ZXh0Ijoi5Lg=", "reaWhyJ9Cg=="],
+      "expectedDecodedRecord": "{\"text\":\"\u4e2d\u6587\"}"
+    },
+    {
+      "name": "truncated_final_record",
+      "chunks": ["{\"type\":\"alpha\""],
+      "expectedRecords": [],
+      "expectedRemainder": "{\"type\":\"alpha\""
+    },
+    {
+      "name": "invalid_json_record",
+      "chunks": ["{not-json}\n"],
+      "expectedRecords": ["{not-json}"],
+      "expectedJsonValidity": false
+    }
+  ]
+}

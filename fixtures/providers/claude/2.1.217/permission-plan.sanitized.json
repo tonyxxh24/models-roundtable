@@ -1,0 +1,7 @@
+{
+  "effectivePermissionMode": "plan",
+  "requestedAction": "create file in disposable workspace",
+  "fileCreated": false,
+  "terminalSubtype": "error_max_turns",
+  "interpretation": "The process did not modify the workspace. This is sufficient for the read-only MVP profile but does not prove a complete approval protocol."
+}

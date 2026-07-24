@@ -1,0 +1,4 @@
+{"type":"system","subtype":"init","cwd":"<TEMP_WORKSPACE>","session_id":"<SESSION_ID>","permissionMode":"plan","claude_code_version":"2.1.217"}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"P"}},"session_id":"<SESSION_ID>"}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"HASE0_RESUME_OK"}},"session_id":"<SESSION_ID>"}
+{"type":"result","subtype":"success","is_error":false,"result":"PHASE0_RESUME_OK","terminal_reason":"completed","session_id":"<SESSION_ID>"}

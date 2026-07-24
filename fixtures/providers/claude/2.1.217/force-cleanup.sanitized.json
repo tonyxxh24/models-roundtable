@@ -1,0 +1,7 @@
+{
+  "started": true,
+  "wasRunningAtCancel": true,
+  "exitedAfterOwnedTermination": true,
+  "exitCode": -1,
+  "interpretation": "Forced cleanup of an application-owned child was observed. Provider-level graceful cancellation remains unverified."
+}

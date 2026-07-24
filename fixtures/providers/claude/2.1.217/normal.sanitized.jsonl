@@ -1,0 +1,10 @@
+{"type":"system","subtype":"init","cwd":"<TEMP_WORKSPACE>","session_id":"<SESSION_ID>","permissionMode":"plan","claude_code_version":"2.1.217"}
+{"type":"system","subtype":"status","status":"requesting","session_id":"<SESSION_ID>"}
+{"type":"stream_event","event":{"type":"message_start"},"session_id":"<SESSION_ID>"}
+{"type":"stream_event","event":{"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}},"session_id":"<SESSION_ID>"}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"P"}},"session_id":"<SESSION_ID>"}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"HASE0_OK"}},"session_id":"<SESSION_ID>"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"PHASE0_OK"}]},"session_id":"<SESSION_ID>"}
+{"type":"stream_event","event":{"type":"content_block_stop","index":0},"session_id":"<SESSION_ID>"}
+{"type":"stream_event","event":{"type":"message_stop"},"session_id":"<SESSION_ID>"}
+{"type":"result","subtype":"success","is_error":false,"result":"PHASE0_OK","terminal_reason":"completed","session_id":"<SESSION_ID>"}
