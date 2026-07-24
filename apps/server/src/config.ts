@@ -1,5 +1,5 @@
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { isAbsolute, join, parse, resolve } from "node:path";
 
 const loopbackHost = "127.0.0.1";
 
@@ -9,6 +9,7 @@ export interface ServerConfig {
   readonly dataDirectory: string;
   readonly allowedOrigins: readonly string[];
   readonly webAssetsDirectory: string;
+  readonly codexWorkspace?: string;
 }
 
 function parsePort(value: string | undefined): number {
@@ -41,6 +42,19 @@ export function loadServerConfig(
   }
 
   const port = parsePort(environment.MODELS_ROUNDTABLE_PORT);
+  const configuredWorkspace = environment.MODELS_ROUNDTABLE_CODEX_WORKSPACE;
+  let codexWorkspace: string | undefined;
+  if (configuredWorkspace !== undefined && configuredWorkspace.trim() !== "") {
+    if (!isAbsolute(configuredWorkspace)) {
+      throw new Error("MODELS_ROUNDTABLE_CODEX_WORKSPACE must be absolute.");
+    }
+    codexWorkspace = resolve(configuredWorkspace);
+    if (codexWorkspace === parse(codexWorkspace).root) {
+      throw new Error(
+        "MODELS_ROUNDTABLE_CODEX_WORKSPACE cannot be a filesystem root.",
+      );
+    }
+  }
   return {
     host: loopbackHost,
     port,
@@ -53,5 +67,6 @@ export function loadServerConfig(
       "http://" + loopbackHost + ":5173",
     ],
     webAssetsDirectory: resolve(process.cwd(), "../web/dist"),
+    ...(codexWorkspace === undefined ? {} : { codexWorkspace }),
   };
 }

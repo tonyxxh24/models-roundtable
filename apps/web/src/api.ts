@@ -84,6 +84,14 @@ export interface ProviderReadiness {
   readonly providerVersion?: string;
   readonly capabilityHash?: string;
   readonly safeMessage: string;
+  readonly workspaceConfigured: boolean;
+}
+
+export async function addCodexParticipant(roomId: string): Promise<void> {
+  await jsonRequest(
+    "/api/v1/rooms/" + encodeURIComponent(roomId) + "/participants/codex",
+    { method: "POST", body: "{}" },
+  );
 }
 
 export function fetchCodexReadiness(): Promise<ProviderReadiness> {

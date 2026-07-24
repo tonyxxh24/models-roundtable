@@ -46,15 +46,29 @@ Runtime data is stored outside the repository by default at
 `MODELS_ROUNDTABLE_DATA_DIR` before starting the server; do not point it at the
 repository. See [.env.example](.env.example).
 
+### Opt in to the read-only Codex agent
+
+Codex is never added to rooms by default. Start the app from PowerShell with an
+absolute, owner-selected workspace:
+
+~~~powershell
+$env:MODELS_ROUNDTABLE_CODEX_WORKSPACE = 'C:\path\to\a\project'
+pnpm dev
+~~~
+
+After the readiness panel reports Codex as ready, use **Add @codex to this
+room**. New Codex turns use the verified read-only sandbox. Resume remains
+disabled until the installed CLI exposes a verified read-only resume
+invocation. Never configure a filesystem root or use a `dangerously-*` flag.
+
 ## Product boundary
 
 - Personal Mode may wrap official Codex CLI and Claude Code CLI installations
   already authenticated by the machine owner.
 - Provider credentials remain in provider-owned credential stores and are never
   copied into the application database.
-- Real Codex integration is blocked until an owner-interactive Phase 0 re-probe
-  produces a GO/GO WITH LIMITATIONS decision and sanitized fixtures. Follow the
-  [provider probe runbook](spikes/provider-probe/README.md).
+- Codex CLI 0.145.0 is GO WITH LIMITATIONS for explicit, owner-only read-only
+  sessions; the app performs no provider login and stores no credentials.
 - Skills, `AGENTS.md`/`CLAUDE.md` projection, and workspace permissions are
   Phase 5 work; release hardening is Phase 6; human collaboration is Phase 7.
 - The product remains local-only, read-only by default, and single-owner until

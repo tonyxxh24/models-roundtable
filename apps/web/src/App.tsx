@@ -6,6 +6,7 @@ import {
   type ReactElement,
 } from "react";
 import {
+  addCodexParticipant,
   bootstrapSession,
   cancelRun,
   connectRoomRealtime,
@@ -67,6 +68,8 @@ export interface ChatViewProps {
   readonly streamingTextByRun: Readonly<Record<string, string>>;
   readonly onCreateRoom: () => void;
   readonly codexReadiness?: ProviderReadiness | undefined;
+  readonly onAddCodex?: (() => void) | undefined;
+  readonly codexAdded?: boolean | undefined;
 }
 
 export function ChatView({
@@ -86,6 +89,8 @@ export function ChatView({
   streamingTextByRun,
   onCreateRoom,
   codexReadiness,
+  onAddCodex,
+  codexAdded,
 }: ChatViewProps): ReactElement {
   return (
     <main className="chat-layout">
@@ -124,6 +129,14 @@ export function ChatView({
               ? ""
               : " — " + codexReadiness.safeMessage}
           </p>
+          {codexReadiness?.health === "ready" &&
+            codexReadiness.workspaceConfigured &&
+            !codexAdded && (
+              <button type="button" onClick={onAddCodex}>
+                Add @codex to this room
+              </button>
+            )}
+          {codexAdded && <p>@codex is available in this room.</p>}
           <div role="status" aria-live="polite" aria-label="Active runs">
             {activeRuns.map((run) => (
               <p key={run.runId}>
@@ -240,6 +253,7 @@ export default function App(): ReactElement {
     Readonly<Record<string, string>>
   >({});
   const [codexReadiness, setCodexReadiness] = useState<ProviderReadiness>();
+  const [codexAdded, setCodexAdded] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -368,6 +382,7 @@ export default function App(): ReactElement {
       }}
       onSelectRoom={(selectedRoom) => {
         setRoom(selectedRoom);
+        setCodexAdded(false);
         setContext(undefined);
         void Promise.all([
           fetchMessages(selectedRoom.roomId),
@@ -414,6 +429,7 @@ export default function App(): ReactElement {
             setRoom(createdRoom);
             setMessages(await fetchMessages(createdRoom.roomId));
             setActiveRuns([]);
+            setCodexAdded(false);
             setContext(undefined);
           })
           .catch((error: unknown) => {
@@ -421,6 +437,15 @@ export default function App(): ReactElement {
           });
       }}
       codexReadiness={codexReadiness}
+      codexAdded={codexAdded}
+      onAddCodex={() => {
+        if (room === undefined) return;
+        void addCodexParticipant(room.roomId)
+          .then(() => setCodexAdded(true))
+          .catch((error: unknown) => {
+            setDetail(error instanceof Error ? error.message : "unknown error");
+          });
+      }}
     />
   );
 }

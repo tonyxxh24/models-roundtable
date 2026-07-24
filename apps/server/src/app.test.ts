@@ -96,6 +96,7 @@ describe("local server security shell", () => {
       health: "ready",
       providerVersion: "0.145.0",
       capabilityHash: "test-capability-hash",
+      workspaceConfigured: false,
     });
 
     const createRoom = await server.inject({
@@ -109,6 +110,13 @@ describe("local server security shell", () => {
       roomId: string;
       participants: readonly { kind: string }[];
     }>();
+    const addCodexWithoutWorkspace = await server.inject({
+      method: "POST",
+      url: "/api/v1/rooms/" + created.roomId + "/participants/codex",
+      headers: { cookie: cookieHeader as string },
+      payload: {},
+    });
+    expect(addCodexWithoutWorkspace.statusCode).toBe(409);
     expect(
       created.participants.filter((item) => item.kind === "agent"),
     ).toHaveLength(2);

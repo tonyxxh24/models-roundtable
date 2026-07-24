@@ -10,6 +10,7 @@ import {
   idSchema,
   sendMessageRequestSchema,
   type HealthResponse,
+  type ProviderAdapter,
   type ProviderEvent,
 } from "@models-roundtable/contracts";
 import {
@@ -20,7 +21,10 @@ import {
 } from "@models-roundtable/core";
 import type { DatabaseHandle } from "@models-roundtable/db";
 import { createFakeAdapter } from "@models-roundtable/provider-fake";
-import { probeCodexExecutable } from "@models-roundtable/provider-codex";
+import {
+  createCodexAdapter,
+  probeCodexExecutable,
+} from "@models-roundtable/provider-codex";
 import Fastify, {
   type FastifyInstance,
   type FastifyReply,
@@ -111,6 +115,15 @@ export async function buildServer(
     ],
     hangWhenPromptIncludes: "[hang]",
   });
+  const adapters = new Map<string, ProviderAdapter>([
+    [fakeAdapter.id, fakeAdapter],
+  ]);
+  if (dependencies.config.codexWorkspace !== undefined) {
+    const codexAdapter = createCodexAdapter({
+      workingDirectory: dependencies.config.codexWorkspace,
+    });
+    adapters.set(codexAdapter.id, codexAdapter);
+  }
   const supervisor = createRunSupervisor(
     {
       listQueuedRuns: () => dependencies.database.rooms.listQueuedRuns(),
@@ -124,7 +137,7 @@ export async function buildServer(
         publishTransientProviderEvent(runId, event);
       },
     },
-    new Map([[fakeAdapter.id, fakeAdapter]]),
+    adapters,
   );
 
   function sendRealtime<T extends object>(
@@ -395,8 +408,52 @@ export async function buildServer(
         requestId(request),
       );
     }
-    return (dependencies.codexProbe ?? probeCodexExecutable)();
+    return {
+      ...(await (dependencies.codexProbe ?? probeCodexExecutable)()),
+      workspaceConfigured: dependencies.config.codexWorkspace !== undefined,
+    };
   });
+
+  application.post(
+    "/api/v1/rooms/:roomId/participants/codex",
+    async (request, reply) => {
+      if (!hasSession(request)) {
+        return sendSafeError(
+          reply,
+          401,
+          "SESSION_REQUIRED",
+          "A local bootstrap session is required.",
+          requestId(request),
+        );
+      }
+      if (!adapters.has("codex")) {
+        return sendSafeError(
+          reply,
+          409,
+          "CODEX_WORKSPACE_REQUIRED",
+          "Configure an absolute Codex workspace before adding @codex.",
+          requestId(request),
+        );
+      }
+      const { roomId } = request.params as { readonly roomId: string };
+      const existing = dependencies.database.rooms
+        .listParticipants(roomId)
+        .find(
+          (participant) =>
+            participant.handle.toLocaleLowerCase("en-US") === "codex",
+        );
+      if (existing !== undefined) return reply.code(200).send(existing);
+      const created = dependencies.database.rooms.addAgent({
+        roomId,
+        handle: "codex",
+        displayName: "Codex",
+        adapterId: "codex",
+        permission: "workspace_read",
+      });
+      publishRoomEvents(roomId);
+      return reply.code(201).send(created);
+    },
+  );
 
   function hasSession(request: FastifyRequest): boolean {
     const session = request.cookies[sessionCookieName];

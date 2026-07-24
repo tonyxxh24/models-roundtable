@@ -36,6 +36,8 @@ provider demo.
   the selected adapter; fake agents remain `chat_only` by default.
 - Added a bounded version/help readiness probe, authenticated local API, and
   frontend status display. Tests inject the probe and never call real Codex.
+- Added explicit workspace configuration and a per-room owner action for
+  creating `@codex`; default rooms and `@all` remain fake-only.
 
 ## Files changed
 
@@ -50,6 +52,7 @@ provider demo.
 - `packages/db/src/rooms.ts`: adapter-aware profiles, queues, and sessions.
 - `apps/server/src/app.ts`: authenticated Codex readiness endpoint.
 - `apps/web/src/App.tsx`: safe Codex readiness/version display.
+- `.env.example`, `README.md`: explicit absolute workspace and opt-in flow.
 - `package.json`: cross-platform Prettier line-ending check.
 - `packages/provider-codex/package.json`, `pnpm-lock.yaml`: local contracts dependency.
 
